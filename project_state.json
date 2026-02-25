@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 7,
+  "summary": "KOMIKU - Platform web komik Indonesia (Manga, Manhwa, Manhua) dengan tampilan mirip MangaRead/WordPress manga theme. Fitur utama: admin panel dengan grabbing halaman dari URL web komik lain, manajemen komik/chapter/kategori, reader komik, pencarian & filter, dan sistem komentar per chapter (hanya untuk pengguna login via Internet Identity).",
+  "architectural_notes": [
+    "Grabbing halaman komik dari web lain hanya bekerja pada situs yang mengizinkan akses publik (tidak ada proteksi CORS/anti-scraping)",
+    "Autentikasi menggunakan Internet Identity; hanya diperlukan untuk fitur komentar"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-build-the-public-facing-frontend-with-a-mangaread-inspired-dark-theme-include-homepage-with-latest-updates-popular-comics-and-genre-filters-comic-listing-browse-page-with-search-genre-filter-type-filter-manga-manhwa-manhua-and-status-filter-comic-detail-page-showing-cover-description-genres-author-chapter-list-chapter-reader-page-supporting-both-vertical-scroll-mode-and-page-by-page-mode-with-navigation-arrows-breadcrumb-navigation-throughout",
+      "title": "Build the public-facing frontend with a MangaRead-inspired dark theme. Include: Homepage with latest updates, popular comics, and genre filters; Comic listing/browse page with search, genre filter, type filter (Manga/Manhwa/Manhua), and status filter; Comic detail page showing cover, description, genres, author, chapter list; Chapter reader page supporting both vertical scroll mode and page-by-page mode with navigation arrows; Breadcrumb navigation throughout.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-comment-section-on-the-chapter-reader-page-comments-are-visible-to-all-visitors-posting-a-comment-requires-login-via-internet-identity-show-a-login-to-comment-prompt-for-unauthenticated-users-display-commenter-username-and-timestamp-for-each-comment",
+      "title": "Build the comment section on the chapter reader page. Comments are visible to all visitors. Posting a comment requires login via Internet Identity. Show a 'Login to comment' prompt for unauthenticated users. Display commenter username and timestamp for each comment.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-admin-panel-as-a-protected-section-only-accessible-when-logged-in-as-the-admin-principal-via-internet-identity-the-admin-panel-must-include-dashboard-with-stats-total-comics-chapters-comments-comic-management-create-edit-delete-comics-with-cover-image-url-metadata-genres-chapter-management-add-chapters-to-a-comic-with-manual-page-url-entry-or-via-the-grabbing-tool-category-genre-management-comment-moderation-view-and-delete-comments",
+      "title": "Build the Admin Panel as a protected section (only accessible when logged in as the admin principal via Internet Identity). The admin panel must include: Dashboard with stats (total comics, chapters, comments); Comic management (create, edit, delete comics with cover image URL, metadata, genres); Chapter management (add chapters to a comic with manual page URL entry or via the grabbing tool); Category/genre management; Comment moderation (view and delete comments).",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-chapter-grabbing-ui-in-the-admin-panel-admin-enters-a-source-url-for-a-comic-chapter-page-from-another-site-the-ui-calls-the-backend-grabcomicpages-function-displays-the-discovered-image-urls-as-a-preview-grid-showing-the-images-allows-the-admin-to-reorder-or-remove-unwanted-images-then-saves-the-confirmed-page-list-as-a-new-chapter",
+      "title": "Build the Chapter Grabbing UI in the admin panel. Admin enters a source URL for a comic chapter page from another site. The UI calls the backend grabComicPages function, displays the discovered image URLs as a preview grid (showing the images), allows the admin to reorder or remove unwanted images, then saves the confirmed page list as a new chapter.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-consistent-dark-manga-reader-visual-theme-across-the-entire-public-frontend-dark-background-near-black-accent-color-in-red-orange-bold-typography-for-titles-clean-card-grid-layout-for-comic-listings-smooth-hover-effects-on-comic-cards-showing-title-overlay-and-a-sticky-top-navigation-bar-with-logo-search-bar-and-login-button",
+      "title": "Apply a consistent dark manga-reader visual theme across the entire public frontend: dark background (near-black), accent color in red/orange, bold typography for titles, clean card grid layout for comic listings, smooth hover effects on comic cards showing title overlay, and a sticky top navigation bar with logo, search bar, and login button.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-use-the-generated-komiku-logo-image-komiku-logo-dim-200x60-png-in-the-sticky-navigation-bar-and-use-the-generated-banner-image-komiku-hero-banner-dim-1200x300-png-as-the-homepage-hero-section-background",
+      "title": "Use the generated KOMIKU logo image (komiku-logo.dim_200x60.png) in the sticky navigation bar and use the generated banner image (komiku-hero-banner.dim_1200x300.png) as the homepage hero section background.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-chapterreaderpage-remove-the-header-breadcrumb-navigation-bar-that-currently-appears-at-the-top-of-the-page-the-page-should-display-only-the-reading-content-without-any-top-header",
+      "title": "On the ChapterReaderPage, remove the header/breadcrumb navigation bar that currently appears at the top of the page. The page should display only the reading content without any top header.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-chapterreaderpage-add-simple-prev-and-next-navigation-buttons-to-allow-users-to-navigate-between-chapters-the-buttons-should-be-prominently-placed-e-g-fixed-or-at-top-bottom-of-the-page-and-clearly-labeled-with-and-icons-or-text-the-prev-button-should-be-disabled-or-hidden-when-on-the-first-chapter-and-the-next-button-should-be-disabled-or-hidden-when-on-the-last-chapter",
+      "title": "On the ChapterReaderPage, add simple Prev ( < ) and Next ( > ) navigation buttons to allow users to navigate between chapters. The buttons should be prominently placed (e.g., fixed or at top/bottom of the page) and clearly labeled with < and > icons or text. The Prev button should be disabled or hidden when on the first chapter, and the Next button should be disabled or hidden when on the last chapter.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-deploy-the-current-build-directly-to-the-live-environment-skipping-the-draft-review-stage-no-code-changes-are-needed-this-is-a-promotion-of-the-existing-draft-to-production",
+      "title": "Deploy the current build directly to the live environment, skipping the draft review stage. No code changes are needed — this is a promotion of the existing draft to production.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Tampilan/tema mirip MangaRead dengan reader komik (scroll/halaman per halaman)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Sistem kategori & genre komik Indonesia (Manga, Manhwa, Manhua, Action, Romance, dll)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Admin panel: manajemen komik, chapter, kategori, tag, dan upload halaman",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Fitur grabbing halaman komik otomatis dari URL web komik lain di admin panel",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Autentikasi via Internet Identity hanya untuk fitur komentar per chapter",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Pencarian dan filter komik berdasarkan genre dan kategori",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Create a backend data model and actor with stable storage for: Comics (id, title, description, coverImage, type: Manga/Manhwa/Manhua, genres, status: Ongoing/Completed, author, artist, createdAt, updatedAt, viewCount), Chapters (id, comicId, number, title, pages: [imageUrl], createdAt), Categories/Genres (id, name), Comments (id, chapterId, userId, username, text, createdAt). Implement CRUD operations for all entities.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Implement backend query functions: getComics (with optional filters: genre, type, status, search keyword, pagination), getComicById, getChaptersByComicId, getChapterById, getCommentsByChapterId, and getLatestUpdatedComics for the homepage.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Implement a backend 'grabComicPages' function that accepts a URL string. The function should attempt to fetch the page content at the URL and extract image URLs from it (looking for img tags with common manga page patterns). Return the list of discovered image URLs so the admin can review and confirm before saving as chapter pages.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Implement backend comment functions: addComment (requires authenticated Internet Identity principal, chapterId, text), deleteComment (admin or comment owner only), getCommentsByChapterId. Store the user's principal as userId and allow them to set a display username.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Implement backend admin authorization: designate a hardcoded or configurable admin principal. All admin-only operations (create/update/delete comics, chapters, categories; grabbing; delete any comment) must verify the caller's principal against the admin principal.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Di halaman chapter reader: hapus header dan tambahkan tombol navigasi Prev (<) dan Next (>) yang simpel untuk berpindah antar chapter",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "KOMIKU",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

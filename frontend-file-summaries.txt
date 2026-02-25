@@ -1,0 +1,18 @@
+{
+  "frontend/src/hooks/useQueries.ts": "All React Query hooks for backend interactions — fixed `useGetComics` to serialize the `bigint` genre filter to string in the query key array, eliminating the BigInt-in-query-key lint error.",
+  "frontend/src/components/ComicCard.tsx": "Reusable comic card component with cover image, type/status badges, hover overlay, and view count — replaced `flex-shrink-0` with `shrink-0` (Tailwind v3).",
+  "frontend/src/components/CommentSection.tsx": "Chapter comment section with login prompt for unauthenticated users, comment form, username setup modal, and comment list with delete — replaced `flex-shrink-0` with `shrink-0` and removed unused `useQueryClient` import.",
+  "frontend/src/components/Navigation.tsx": "Sticky top navigation bar with logo, search, nav links, admin link, and login/logout button — replaced `flex-shrink-0` with `shrink-0`.",
+  "frontend/src/components/admin/AdminLayout.tsx": "Admin panel layout with collapsible sidebar navigation, access control check, and mobile overlay — replaced `flex-shrink-0` with `shrink-0`.",
+  "frontend/src/pages/BrowsePage.tsx": "Comic browse/search page with genre, type, and status filters — replaced `flex-shrink-0` with `shrink-0`.",
+  "frontend/src/pages/ChapterReaderPage.tsx": "Chapter reader page with the sticky header/breadcrumb removed; replaced with a compact inline Prev (`<`) / Next (`>`) button bar at the top of the reading area alongside the read-mode toggle, plus the existing bottom chapter navigation and comment section.",
+  "frontend/src/pages/ComicDetailPage.tsx": "Comic detail page showing metadata, cover, genres, chapter list, and action buttons — replaced all `flex-shrink-0` with `shrink-0`.",
+  "frontend/src/pages/HomePage.tsx": "Homepage with hero banner, genre filter bar, latest updated comics, and popular comics sections — replaced `flex-shrink-0` with `shrink-0`.",
+  "frontend/src/pages/admin/AdminDashboardPage.tsx": "Admin dashboard with stats cards, quick action buttons, and recent comics list — replaced `flex-shrink-0` with `shrink-0` and fixed Skeleton rendering inside JSX expression.",
+  "frontend/src/pages/admin/ComicManagementPage.tsx": "Admin page for creating, editing, and deleting comics with a modal form supporting all metadata fields (title, description, cover URL, type, status, author, artist, genres via checkbox selection).",
+  "frontend/src/pages/admin/ChapterManagementPage.tsx": "Admin page for managing chapters per comic — select a comic from a dropdown, then add/edit/delete chapters with number, title, and multi-line page URL input.",
+  "frontend/src/pages/admin/GenreManagementPage.tsx": "Admin page for managing genres/categories — add new genres via a form and delete existing ones from a list with hover-reveal delete buttons.",
+  "frontend/src/pages/admin/CommentModerationPage.tsx": "Admin page for moderating comments across all chapters — loads comments per chapter using sub-components, supports search filtering, and allows admins to delete any comment.",
+  "frontend/src/pages/admin/ChapterGrabbingPage.tsx": "Admin page for grabbing comic page images from external URLs — fetches HTML via backend, extracts image URLs, shows a draggable/removable preview grid, then saves as a new chapter.",
+  "frontend/index.html": "HTML entry point for the KOMIKU app, sets up the root div and loads the main TypeScript module. No functional changes — this file was touched to promote the current draft build to live production."
+}

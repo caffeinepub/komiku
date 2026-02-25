@@ -1,0 +1,36 @@
+{
+  "kind": "build_request",
+  "title": "Publish current build to live",
+  "projectName": "KOMIKU",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-14",
+      "text": "Deploy the current build directly to the live environment, skipping the draft review stage. No code changes are needed — this is a promotion of the existing draft to production.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Di draft tidak ada komiknya, langsung saja going live"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The current draft build is promoted and accessible as the live version.",
+        "No functional or visual changes are introduced during this deployment."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify any code — this is a straight promotion of the existing draft to live."
+  ],
+  "nonGoals": [
+    "Fixing missing comic data — this is a data/seeding issue, not a code change.",
+    "Any UI or backend feature changes."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

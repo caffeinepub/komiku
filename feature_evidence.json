@@ -1,0 +1,25 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-deploy-the-current-build-directly-to-the-live-environment-skipping-the-draft-review-stage-no-code-changes-are-needed-this-is-a-promotion-of-the-existing-draft-to-production",
+      "featureTitle": "Deploy the current build directly to the live environment, skipping the draft review stage. No code changes are needed — this is a promotion of the existing draft to production.",
+      "files": [
+        "frontend/index.html"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-14"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
