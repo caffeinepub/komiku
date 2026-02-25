@@ -1,37 +1,55 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend-side chapter grabbing using allorigins.win with fallback",
+  "title": "Fix 'actor not available' error on Claim Admin and admin panel content not rendering",
   "requirements": [
     {
-      "id": "REQ-18",
-      "summary": "Refactor ChapterGrabbingPage to perform HTML fetching entirely on the frontend using allorigins.win proxy with automatic fallback to corsproxy.io, extracting manga page image URLs client-side and displaying them as a preview grid before saving",
+      "id": "REQ-19",
+      "summary": "Fix 'actor not available' error when Claim Admin button is clicked by ensuring actor initialization before calling claimAdmin",
       "acceptanceCriteria": [
-        "The ChapterGrabbingPage no longer calls the backend grabComicPages function for fetching page content.",
-        "Entering a source URL and clicking grab sends a request to https://api.allorigins.win/get?url=<encoded_url> from the frontend.",
-        "The response HTML is parsed client-side to extract img tag URLs matching manga page patterns.",
-        "If allorigins.win returns an error or times out, the UI automatically retries via a fallback proxy (e.g., corsproxy.io).",
-        "If both proxies fail, an informative error message is displayed to the admin.",
-        "Successfully extracted image URLs are displayed as a preview grid showing the actual images.",
-        "Admin can reorder and remove images from the preview grid before saving.",
-        "Saving the confirmed page list still calls the existing backend chapter creation mutation.",
-        "The scope of this change is limited to the Chapter Grabbing UI only."
+        "Clicking the 'Claim Admin' button no longer shows 'actor not available'",
+        "The claimAdmin call waits until the backend actor is initialized before executing",
+        "If actor initialization fails after retries, a friendly error message is displayed to the user",
+        "The fix handles the race condition between Internet Identity authentication and actor initialization"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/proxyFetch.ts",
-          "operation": "create",
-          "description": "Create a utility module that exports fetchViaProxy function for making HTTP requests through allorigins.win as primary proxy (https://api.allorigins.win/get?url=<encoded_url>) and corsproxy.io as fallback (https://corsproxy.io/?<encoded_url>). The function encodes the target URL, attempts the primary proxy first with timeout handling, automatically falls back to the secondary proxy on failure, and returns the HTML content string or throws an error if both proxies fail. Include proper error types to differentiate network errors, timeouts, and HTTP status failures."
-        },
-        {
-          "path": "frontend/src/utils/htmlParser.ts",
-          "operation": "create",
-          "description": "Create a utility module that exports extractImageUrls function to parse HTML strings and extract image URLs matching common manga page patterns. Use DOMParser to parse the HTML, query for img tags, filter by patterns such as large image dimensions, numbered filenames, common manga CDN domains, and sequential naming conventions. Return an array of extracted image URL strings with duplicates removed and maintain order of appearance."
-        },
-        {
-          "path": "frontend/src/pages/admin/ChapterGrabbingPage.tsx",
+          "path": "frontend/src/components/admin/AdminLayout.tsx",
           "operation": "modify",
-          "description": "Refactor the page to remove all calls to the backend grabComicPages function. Replace the backend fetch with client-side proxy fetching using the new fetchViaProxy utility from frontend/src/utils/proxyFetch.ts. On grab button click, call fetchViaProxy with the admin-entered source URL, handle loading states during primary and fallback proxy attempts, parse the returned HTML using extractImageUrls from frontend/src/utils/htmlParser.ts to extract manga page image URLs, and display them in a preview grid showing the actual images (not just URLs). Add UI feedback showing which proxy is being attempted (primary/fallback) and clear error messages when both proxies fail. Preserve the existing drag-and-drop reordering and removal functionality for the preview grid. Keep the save functionality unchanged, continuing to use the existing createChapter mutation from useQueries to persist the final confirmed page list to the backend."
+          "description": "Add actor readiness check before calling claimAdmin mutation. Use the actor and isFetching state from useActor hook to determine if the backend actor is ready. Disable the Claim Admin button while actor is initializing (show loading state). Add error handling that displays a user-friendly error message if the actor fails to initialize after retries or if claimAdmin fails. Ensure the mutation only fires when actor is non-null and ready."
+        }
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "summary": "Fix admin panel content not rendering after successful authentication by ensuring admin status check and conditional rendering work correctly",
+      "acceptanceCriteria": [
+        "After logging in as admin via Internet Identity, the admin panel sidebar navigation links are visible",
+        "Admin panel content (dashboard, comics, chapters, etc.) renders correctly after authentication",
+        "The admin panel does not show a blank or empty state for authenticated admin users",
+        "The Admin Panel link in the navbar correctly navigates to `/admin` and shows the full panel"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/AdminLayout.tsx",
+          "operation": "modify",
+          "description": "Fix the conditional rendering logic for the admin panel sidebar and content. Ensure that after getCallerUserRole or isCallerAdmin query succeeds and confirms admin status, the sidebar navigation (Dashboard, Comics, Chapters, Genres, Comments, Chapter Grabbing links) and outlet content render correctly. Add proper loading states while checking admin status. If the query is still loading, show a loading spinner instead of blank content. Verify that the Outlet component renders child routes correctly once admin status is confirmed."
+        }
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "summary": "Ensure backend actor is fully initialized before mutations are invoked by exposing actor loading state in useQueries mutations",
+      "acceptanceCriteria": [
+        "The Claim Admin button is disabled or shows a loading indicator while the actor is not yet initialized",
+        "No mutation is dispatched to the backend before the actor is ready",
+        "Once the actor is initialized, the button becomes enabled and functions correctly"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Modify the useAssignCallerUserRole mutation (used by claimAdmin) to add an enabled guard that checks if actor is non-null before allowing the mutation. Expose the actor initialization state (isFetching from useActor) so that AdminLayout can use it to disable the Claim Admin button while the actor is still initializing. Ensure all mutations that depend on the actor have proper guards to prevent premature invocation."
         }
       ]
     }

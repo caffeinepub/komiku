@@ -343,7 +343,7 @@ export function useDeleteComment() {
 
 export function useIsCallerAdmin() {
   const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
+  const query = useQuery<boolean>({
     queryKey: ['isAdmin'],
     queryFn: async () => {
       if (!actor) return false;
@@ -351,6 +351,15 @@ export function useIsCallerAdmin() {
     },
     enabled: !!actor && !isFetching,
   });
+
+  // Expose actor loading state so consumers can distinguish "still loading actor"
+  // from "actor ready but not admin"
+  return {
+    ...query,
+    isLoading: isFetching || query.isLoading,
+    isFetched: !!actor && !isFetching && query.isFetched,
+    actorReady: !!actor && !isFetching,
+  };
 }
 
 export function useGetCallerUserRole() {
@@ -369,13 +378,15 @@ export function useGetCallerUserRole() {
  * Claim admin: assigns the caller as admin (one-time operation).
  * Uses assignCallerUserRole with the caller's own principal and admin role.
  * This only works if no admin has been set yet (backend enforces this).
+ * Returns actorReady so the UI can disable the button while actor is loading.
  */
 export function useClaimAdmin() {
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
   const queryClient = useQueryClient();
-  return useMutation({
+
+  const mutation = useMutation({
     mutationFn: async (callerPrincipal: import('@dfinity/principal').Principal) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Actor not available — silakan tunggu sebentar dan coba lagi');
       return actor.assignCallerUserRole(callerPrincipal, UserRole.admin);
     },
     onSuccess: () => {
@@ -383,6 +394,11 @@ export function useClaimAdmin() {
       queryClient.invalidateQueries({ queryKey: ['callerUserRole'] });
     },
   });
+
+  return {
+    ...mutation,
+    actorReady: !!actor && !actorFetching,
+  };
 }
 
 export function useGrabComicPages() {

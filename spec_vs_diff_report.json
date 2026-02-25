@@ -1,16 +1,23 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T03:39:29.051Z",
-  "summary": "The diff implements REQ-18 comprehensively. ChapterGrabbingPage.tsx is refactored to use frontend-only fetching via allorigins.win (primary) and corsproxy.io (fallback), with HTML parsing via a new htmlParser.ts utility, a draggable/removable image preview grid, and the existing createChapter backend mutation for saving. All acceptance criteria appear to be addressed.",
+  "generatedAt": "2026-02-25T03:55:02.663Z",
+  "summary": "The diff implements fixes for all three requirements. AdminLayout.tsx uses actorReady and isFetched from useIsCallerAdmin to handle race conditions, disable the Claim Admin button while actor is initializing, show friendly error messages, and properly render admin panel content. useQueries.ts exposes actorReady flags from useIsCallerAdmin and useClaimAdmin. All three REQs appear to be addressed.",
   "missing_requirements": [],
-  "hallucinated_features": [],
-  "confidence": 0.93,
+  "hallucinated_features": [
+    {
+      "description": "Multiple unrelated files were modified beyond the scope of the bug fix: ComicCard.tsx, CommentSection.tsx, Navigation.tsx, BrowsePage.tsx, ChapterReaderPage.tsx, ComicDetailPage.tsx, HomePage.tsx, AdminDashboardPage.tsx, ComicManagementPage.tsx, ChapterManagementPage.tsx, GenreManagementPage.tsx, CommentModerationPage.tsx, ChapterGrabbingPage.tsx",
+      "reason": "These files contain changes such as Tailwind class renaming, chapter reader UI redesign, and chapter grabbing frontend-only proxy logic that were not requested in the build request, which only asked for fixing actor availability and admin panel rendering issues.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    }
+  ],
+  "confidence": 0.82,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/pages/admin/ChapterGrabbingPage.tsx",
-    "frontend/src/utils/htmlParser.ts",
-    "frontend/src/utils/proxyFetch.ts",
+    "frontend/src/components/admin/AdminLayout.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

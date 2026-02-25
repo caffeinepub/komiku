@@ -1,28 +1,46 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T03:39:29.054Z",
+  "generatedAt": "2026-02-25T03:55:02.667Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-18",
-        "summary": "Refactor the Chapter Grabbing UI in the admin panel (ChapterGrabbingPage.tsx) to perform HTML fetching entirely on the frontend instead of calling the backend grabComicPages function. Use 'https://api.allorigins.win/get?url=<encoded_url>' as the primary proxy: send the admin-entered source URL through allorigins.win, parse the returned HTML content to extract image URLs (img tags matching common manga page patterns such as large images, numbered filenames, and CDN paths). If the allorigins.win request fails (network error, non-200 status, or timeout), automatically fall back to a secondary proxy (e.g., 'https://corsproxy.io/?<encoded_url>') and attempt the same HTML extraction. If both proxies fail, display a clear error message to the admin. After successful extraction, display the discovered image URLs as a preview grid showing the actual images, allow the admin to reorder or remove unwanted images, then save the confirmed page list as a new chapter (still using the existing backend mutation for saving).",
+        "id": "REQ-19",
+        "summary": "In AdminLayout.tsx, fix the 'actor not available' error when the Claim Admin button is clicked. Before calling the `claimAdmin` backend function, ensure the actor is fully initialized — add a readiness check or retry/await mechanism so that if the actor is not yet available, the call is deferred until it is ready. If the actor is still unavailable after retries, display a user-friendly error message instead of the raw 'actor not available' error.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/proxyFetch.ts",
-          "frontend/src/utils/htmlParser.ts",
-          "frontend/src/pages/admin/ChapterGrabbingPage.tsx"
+          "frontend/src/components/admin/AdminLayout.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/proxyFetch.ts",
-          "frontend/src/utils/htmlParser.ts",
-          "frontend/src/pages/admin/ChapterGrabbingPage.tsx"
+          "frontend/src/components/admin/AdminLayout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-20",
+        "summary": "In AdminLayout.tsx, fix the admin panel content not rendering after successful authentication. Ensure that after the admin principal status is confirmed (via `getAdminPrincipal`), the admin panel sidebar navigation and page content are rendered correctly. The admin panel should not remain blank or fail to show navigation links when the authenticated user is the admin.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/AdminLayout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/AdminLayout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-21",
+        "summary": "In useQueries.ts or the actor initialization logic, ensure the backend actor instance is fully available before any mutation (such as `claimAdmin`) is invoked. Add a guard or loading state that blocks mutation calls until the actor from `useActor` is non-null, and expose a loading/ready state that AdminLayout.tsx can use to disable the Claim Admin button while the actor is still initializing.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
         ]
       }
     ]
@@ -32,9 +50,8 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/admin/ChapterGrabbingPage.tsx",
-    "frontend/src/utils/htmlParser.ts",
-    "frontend/src/utils/proxyFetch.ts",
+    "frontend/src/components/admin/AdminLayout.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
