@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type { Comic, Chapter, Comment, Genre, UserProfile } from '../backend';
+import { UserRole } from '../backend';
 
 // ─── Genres ───────────────────────────────────────────────────────────────────
 
@@ -349,6 +350,38 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetCallerUserRole() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserRole>({
+    queryKey: ['callerUserRole'],
+    queryFn: async () => {
+      if (!actor) return UserRole.guest;
+      return actor.getCallerUserRole();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+/**
+ * Claim admin: assigns the caller as admin (one-time operation).
+ * Uses assignCallerUserRole with the caller's own principal and admin role.
+ * This only works if no admin has been set yet (backend enforces this).
+ */
+export function useClaimAdmin() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (callerPrincipal: import('@dfinity/principal').Principal) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.assignCallerUserRole(callerPrincipal, UserRole.admin);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['callerUserRole'] });
+    },
   });
 }
 

@@ -1,62 +1,16 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T02:50:02.647Z",
-  "summary": "The diff shows modifications to frontend files, including code changes (Tailwind class replacements, BigInt serialization fix, unused import removal, chapter reader UI changes) and a trivial touch to frontend/index.html described as promoting the draft to live. REQ-14 requires a straight promotion with no functional or visual changes, but the diff contains multiple functional and visual code changes.",
+  "generatedAt": "2026-02-25T03:39:29.051Z",
+  "summary": "The diff implements REQ-18 comprehensively. ChapterGrabbingPage.tsx is refactored to use frontend-only fetching via allorigins.win (primary) and corsproxy.io (fallback), with HTML parsing via a new htmlParser.ts utility, a draggable/removable image preview grid, and the existing createChapter backend mutation for saving. All acceptance criteria appear to be addressed.",
   "missing_requirements": [],
-  "hallucinated_features": [
-    {
-      "description": "Functional code change: fixed `useGetComics` to serialize bigint genre filter to string in query key, eliminating a BigInt-in-query-key lint error.",
-      "reason": "REQ-14 explicitly states 'No code changes are needed' and 'No functional or visual changes are introduced during this deployment.' Fixing a BigInt serialization bug is a functional code change.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Visual/CSS code changes: replaced `flex-shrink-0` with `shrink-0` (Tailwind v3) across multiple components and pages.",
-      "reason": "REQ-14 requires no functional or visual changes. Updating Tailwind utility classes is a code change, even if visually equivalent.",
-      "evidence": [
-        "frontend/src/components/ComicCard.tsx",
-        "frontend/src/components/CommentSection.tsx",
-        "frontend/src/components/Navigation.tsx",
-        "frontend/src/components/admin/AdminLayout.tsx",
-        "frontend/src/pages/BrowsePage.tsx",
-        "frontend/src/pages/ComicDetailPage.tsx",
-        "frontend/src/pages/HomePage.tsx",
-        "frontend/src/pages/admin/AdminDashboardPage.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Removed unused `useQueryClient` import from CommentSection.",
-      "reason": "REQ-14 requires no code changes. Removing an unused import is a code modification.",
-      "evidence": [
-        "frontend/src/components/CommentSection.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Chapter reader page UI redesign: sticky header/breadcrumb removed and replaced with a compact inline Prev/Next button bar at the top of the reading area alongside the read-mode toggle.",
-      "reason": "REQ-14 explicitly requires no functional or visual changes. This is a significant visual and functional UI change to the chapter reader page.",
-      "evidence": [
-        "frontend/src/pages/ChapterReaderPage.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Fixed Skeleton rendering inside JSX expression in AdminDashboardPage.",
-      "reason": "REQ-14 requires no code changes. This is a code fix introduced during the deployment.",
-      "evidence": [
-        "frontend/src/pages/admin/AdminDashboardPage.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    }
-  ],
-  "confidence": 0.92,
+  "hallucinated_features": [],
+  "confidence": 0.93,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/index.html",
+    "frontend/src/pages/admin/ChapterGrabbingPage.tsx",
+    "frontend/src/utils/htmlParser.ts",
+    "frontend/src/utils/proxyFetch.ts",
     "project_state.json"
   ]
 }

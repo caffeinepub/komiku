@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import {
   LayoutDashboard, BookOpen, BookMarked, Tag, MessageSquare,
-  Download, LogOut, Menu, X, Shield, Home
+  Download, LogOut, Menu, X, Shield, Home, Crown, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
-import { useIsCallerAdmin } from '../../hooks/useQueries';
+import { useIsCallerAdmin, useClaimAdmin } from '../../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface AdminLayoutProps {
@@ -25,9 +25,13 @@ const navItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { identity, clear } = useInternetIdentity();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: adminLoading, refetch: refetchAdmin } = useIsCallerAdmin();
+  const claimAdminMutation = useClaimAdmin();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const isAuthenticated = !!identity;
+  const principalId = identity?.getPrincipal().toString() ?? null;
 
   const handleLogout = async () => {
     await clear();
@@ -35,16 +39,37 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     navigate({ to: '/' });
   };
 
-  // Access denied
-  if (!adminLoading && !isAdmin) {
+  const handleClaimAdmin = async () => {
+    if (!identity) return;
+    try {
+      await claimAdminMutation.mutateAsync(identity.getPrincipal());
+      await refetchAdmin();
+    } catch (err) {
+      // Error is shown via mutation state
+    }
+  };
+
+  // Loading state
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted-foreground font-semibold">Memverifikasi akses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <Shield className="h-16 w-16 mx-auto mb-4 text-destructive opacity-60" />
-          <h1 className="text-2xl font-extrabold text-foreground mb-2">Akses Ditolak</h1>
+          <h1 className="text-2xl font-extrabold text-foreground mb-2">Login Diperlukan</h1>
           <p className="text-muted-foreground mb-6">
-            Kamu tidak memiliki izin untuk mengakses panel admin.
-            {!identity && ' Silakan login terlebih dahulu.'}
+            Silakan login terlebih dahulu untuk mengakses panel admin.
           </p>
           <Link to="/">
             <Button className="bg-primary text-primary-foreground font-bold">
@@ -57,12 +82,63 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (adminLoading) {
+  // Logged in but not admin — show Claim Admin or Access Denied
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground font-semibold">Memverifikasi akses...</p>
+        <div className="text-center max-w-md mx-auto px-4">
+          <Crown className="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+          <h1 className="text-2xl font-extrabold text-foreground mb-2">Setup Admin</h1>
+          <p className="text-muted-foreground mb-2">
+            Belum ada admin yang terdaftar, atau kamu bukan admin.
+          </p>
+          {principalId && (
+            <div className="mb-4 p-3 rounded-lg bg-muted border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Principal ID kamu:</p>
+              <p className="text-xs font-mono text-foreground break-all">{principalId}</p>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground mb-6">
+            Jika kamu adalah pemilik aplikasi ini, klik tombol di bawah untuk mendaftarkan diri sebagai admin.
+            Tindakan ini hanya bisa dilakukan sekali.
+          </p>
+
+          {claimAdminMutation.isError && (
+            <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2 text-left">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs text-destructive">
+                {claimAdminMutation.error instanceof Error
+                  ? claimAdminMutation.error.message
+                  : 'Admin sudah terdaftar. Kamu tidak memiliki izin untuk mengakses panel ini.'}
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={handleClaimAdmin}
+              disabled={claimAdminMutation.isPending}
+              className="bg-primary text-primary-foreground font-bold w-full"
+            >
+              {claimAdminMutation.isPending ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                  Mendaftarkan...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  Klaim sebagai Admin
+                </span>
+              )}
+            </Button>
+            <Link to="/">
+              <Button variant="outline" className="w-full font-bold">
+                <Home className="h-4 w-4 mr-2" />
+                Kembali ke Beranda
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

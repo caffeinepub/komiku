@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Download, X, Save, GripVertical, AlertCircle, ExternalLink } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Download, X, Save, GripVertical, AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useGetAllComics, useGrabComicPages, useCreateChapter } from '../../hooks/useQueries';
+import { useGetAllComics, useCreateChapter } from '../../hooks/useQueries';
+import { fetchViaProxy, type ProxyName } from '../../utils/proxyFetch';
+import { extractImageUrls } from '../../utils/htmlParser';
 import { toast } from 'sonner';
 
 interface GrabbedPage {
@@ -13,26 +15,19 @@ interface GrabbedPage {
   id: string;
 }
 
-function extractImageUrls(html: string): string[] {
-  const urls: string[] = [];
-  // Match img src attributes
-  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-  let match;
-  while ((match = imgRegex.exec(html)) !== null) {
-    const url = match[1];
-    if (url && !url.startsWith('data:') && url.match(/\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)) {
-      urls.push(url);
-    }
+type GrabStatus = 'idle' | 'fetching-allorigins' | 'fetching-corsproxy' | 'parsing' | 'done' | 'error';
+
+function getStatusLabel(status: GrabStatus): string {
+  switch (status) {
+    case 'fetching-allorigins':
+      return 'Mengambil via allorigins.win...';
+    case 'fetching-corsproxy':
+      return 'allorigins.win gagal, mencoba corsproxy.io...';
+    case 'parsing':
+      return 'Mengekstrak URL gambar...';
+    default:
+      return 'Mengambil...';
   }
-  // Also try to find URLs in JSON-like structures
-  const jsonImgRegex = /"(https?:\/\/[^"]+\.(jpg|jpeg|png|webp|gif)[^"]*)"/gi;
-  while ((match = jsonImgRegex.exec(html)) !== null) {
-    const url = match[1];
-    if (!urls.includes(url)) {
-      urls.push(url);
-    }
-  }
-  return [...new Set(urls)];
 }
 
 export default function ChapterGrabbingPage() {
@@ -43,37 +38,60 @@ export default function ChapterGrabbingPage() {
   const [chapterTitle, setChapterTitle] = useState('');
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [grabError, setGrabError] = useState<string | null>(null);
+  const [grabStatus, setGrabStatus] = useState<GrabStatus>('idle');
 
   const { data: comics } = useGetAllComics();
-  const grabPages = useGrabComicPages();
   const createChapter = useCreateChapter();
 
-  const handleGrab = async (e: React.FormEvent) => {
+  const isGrabbing = grabStatus !== 'idle' && grabStatus !== 'done' && grabStatus !== 'error';
+
+  const handleGrab = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+
     setGrabError(null);
     setGrabbedPages([]);
+    setGrabStatus('fetching-allorigins');
 
     try {
-      const result = await grabPages.mutateAsync(url.trim());
-      const imageUrls = extractImageUrls(result);
+      const { html } = await fetchViaProxy(
+        url.trim(),
+        (proxy: ProxyName) => {
+          if (proxy === 'allorigins') setGrabStatus('fetching-allorigins');
+          else if (proxy === 'corsproxy') setGrabStatus('fetching-corsproxy');
+        }
+      );
+
+      setGrabStatus('parsing');
+
+      // Small delay to show parsing state
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const imageUrls = extractImageUrls(html);
 
       if (imageUrls.length === 0) {
-        setGrabError('Tidak ada gambar ditemukan di halaman tersebut. Coba URL yang berbeda atau masukkan URL gambar secara manual.');
+        setGrabStatus('error');
+        setGrabError(
+          'Tidak ada gambar ditemukan di halaman tersebut. ' +
+          'Situs mungkin menggunakan JavaScript rendering atau proteksi anti-scraping. ' +
+          'Coba URL yang berbeda atau masukkan URL gambar secara manual.'
+        );
         return;
       }
 
       setGrabbedPages(imageUrls.map((u, i) => ({ url: u, id: `page-${i}-${Date.now()}` })));
+      setGrabStatus('done');
       toast.success(`Berhasil menemukan ${imageUrls.length} gambar!`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal mengambil halaman';
+      setGrabStatus('error');
       setGrabError(msg);
       toast.error('Gagal grab halaman');
     }
-  };
+  }, [url]);
 
   const removePage = (id: string) => {
-    setGrabbedPages(prev => prev.filter(p => p.id !== id));
+    setGrabbedPages((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleDragStart = (index: number) => {
@@ -114,13 +132,14 @@ export default function ChapterGrabbingPage() {
         comicId: selectedComicId,
         number: BigInt(num),
         title: chapterTitle,
-        pages: grabbedPages.map(p => p.url),
+        pages: grabbedPages.map((p) => p.url),
       });
       toast.success(`Chapter ${num} berhasil disimpan dengan ${grabbedPages.length} halaman!`);
       setGrabbedPages([]);
       setChapterNumber('');
       setChapterTitle('');
       setUrl('');
+      setGrabStatus('idle');
     } catch {
       toast.error('Gagal menyimpan chapter');
     }
@@ -131,7 +150,7 @@ export default function ChapterGrabbingPage() {
       <div>
         <h1 className="text-2xl font-extrabold text-foreground">Grab Halaman Komik</h1>
         <p className="text-muted-foreground text-sm">
-          Ambil gambar halaman komik dari URL web lain secara otomatis
+          Ambil gambar halaman komik dari URL web lain secara otomatis menggunakan proxy frontend
         </p>
       </div>
 
@@ -146,17 +165,18 @@ export default function ChapterGrabbingPage() {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/manga/chapter-1"
               className="bg-muted border-border font-mono text-sm"
+              disabled={isGrabbing}
             />
           </div>
           <Button
             type="submit"
-            disabled={grabPages.isPending || !url.trim()}
+            disabled={isGrabbing || !url.trim()}
             className="bg-primary text-primary-foreground font-bold shrink-0"
           >
-            {grabPages.isPending ? (
+            {isGrabbing ? (
               <span className="flex items-center gap-2">
-                <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                Mengambil...
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {getStatusLabel(grabStatus)}
               </span>
             ) : (
               <>
@@ -167,6 +187,17 @@ export default function ChapterGrabbingPage() {
           </Button>
         </form>
 
+        {/* Proxy status indicator */}
+        {isGrabbing && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>{getStatusLabel(grabStatus)}</span>
+            {grabStatus === 'fetching-corsproxy' && (
+              <span className="text-warning font-medium">(fallback proxy)</span>
+            )}
+          </div>
+        )}
+
         {grabError && (
           <Alert variant="destructive" className="mt-3 border-destructive/50 bg-destructive/10">
             <AlertCircle className="h-4 w-4" />
@@ -176,7 +207,7 @@ export default function ChapterGrabbingPage() {
 
         <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
           <ExternalLink className="h-3 w-3" />
-          Hanya bekerja pada situs yang mengizinkan akses publik (tanpa proteksi CORS/anti-scraping)
+          Menggunakan allorigins.win sebagai proxy utama, corsproxy.io sebagai fallback
         </p>
       </div>
 
@@ -185,7 +216,7 @@ export default function ChapterGrabbingPage() {
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-extrabold text-foreground">
-              2. Preview & Susun Halaman
+              2. Preview &amp; Susun Halaman
               <span className="text-muted-foreground font-normal text-sm ml-2">
                 ({grabbedPages.length} halaman — drag untuk mengubah urutan)
               </span>
@@ -201,7 +232,9 @@ export default function ChapterGrabbingPage() {
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={`relative group cursor-grab active:cursor-grabbing rounded-lg overflow-hidden border-2 transition-all ${
-                  dragIndex === index ? 'border-primary opacity-50 scale-95' : 'border-border hover:border-primary/50'
+                  dragIndex === index
+                    ? 'border-primary opacity-50 scale-95'
+                    : 'border-border hover:border-primary/50'
                 }`}
               >
                 <div className="aspect-[2/3] bg-muted">
@@ -288,7 +321,7 @@ export default function ChapterGrabbingPage() {
           >
             {createChapter.isPending ? (
               <span className="flex items-center gap-2">
-                <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Menyimpan...
               </span>
             ) : (

@@ -1,21 +1,40 @@
 import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Search, Menu, X, Shield, LogIn, LogOut } from 'lucide-react';
+import { Search, Menu, X, Shield, LogIn, LogOut, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdmin } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 
+function truncatePrincipal(principal: string): string {
+  if (principal.length <= 16) return principal;
+  return `${principal.slice(0, 8)}...${principal.slice(-5)}`;
+}
+
 export default function Navigation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { identity, login, clear, loginStatus } = useInternetIdentity();
   const { data: isAdmin } = useIsCallerAdmin();
   const isAuthenticated = !!identity;
   const isLoggingIn = loginStatus === 'logging-in';
+
+  const principalId = identity?.getPrincipal().toString() ?? null;
+
+  const handleCopyPrincipal = async () => {
+    if (!principalId) return;
+    try {
+      await navigator.clipboard.writeText(principalId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback: do nothing
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +106,23 @@ export default function Navigation() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            {/* Principal ID display (desktop) */}
+            {isAuthenticated && principalId && (
+              <button
+                onClick={handleCopyPrincipal}
+                title={`Principal ID: ${principalId}\nKlik untuk menyalin`}
+                className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted hover:bg-muted/80 border border-border text-xs text-muted-foreground font-mono transition-colors group"
+              >
+                <span className="max-w-[100px] truncate">{truncatePrincipal(principalId)}</span>
+                {copied ? (
+                  <Check className="h-3 w-3 text-success shrink-0" />
+                ) : (
+                  <Copy className="h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" />
+                )}
+              </button>
+            )}
+
+            {/* Admin Panel link (only for admins) */}
             {isAdmin && (
               <Link to="/admin">
                 <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground">
@@ -95,6 +131,7 @@ export default function Navigation() {
                 </Button>
               </Link>
             )}
+
             <Button
               onClick={handleAuth}
               disabled={isLoggingIn}
@@ -153,18 +190,19 @@ export default function Navigation() {
                 <Search className="h-4 w-4" />
               </Button>
             </form>
-            <nav className="flex flex-col gap-2">
+
+            <nav className="space-y-1">
               <Link
                 to="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-bold text-foreground/80 hover:text-primary py-2 uppercase tracking-wide"
+                className="block px-3 py-2 rounded-lg text-sm font-bold text-foreground/80 hover:text-primary hover:bg-muted transition-colors uppercase tracking-wide"
               >
                 Beranda
               </Link>
               <Link
                 to="/browse"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-bold text-foreground/80 hover:text-primary py-2 uppercase tracking-wide"
+                className="block px-3 py-2 rounded-lg text-sm font-bold text-foreground/80 hover:text-primary hover:bg-muted transition-colors uppercase tracking-wide"
               >
                 Jelajahi
               </Link>
@@ -172,13 +210,28 @@ export default function Navigation() {
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-bold text-primary py-2 flex items-center gap-2"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold text-primary hover:bg-primary/10 transition-colors uppercase tracking-wide"
                 >
                   <Shield className="h-4 w-4" />
                   Admin Panel
                 </Link>
               )}
             </nav>
+
+            {/* Principal ID on mobile */}
+            {isAuthenticated && principalId && (
+              <button
+                onClick={handleCopyPrincipal}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted border border-border text-xs text-muted-foreground font-mono"
+              >
+                <span className="truncate">{truncatePrincipal(principalId)}</span>
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 shrink-0" />
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

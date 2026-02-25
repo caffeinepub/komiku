@@ -1,20 +1,37 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Publish current build to live",
+  "title": "Frontend-side chapter grabbing using allorigins.win with fallback",
   "requirements": [
     {
-      "id": "REQ-14",
-      "summary": "Deploy the current draft build to live production without any code modifications",
+      "id": "REQ-18",
+      "summary": "Refactor ChapterGrabbingPage to perform HTML fetching entirely on the frontend using allorigins.win proxy with automatic fallback to corsproxy.io, extracting manga page image URLs client-side and displaying them as a preview grid before saving",
       "acceptanceCriteria": [
-        "The current draft build is promoted and accessible as the live version.",
-        "No functional or visual changes are introduced during this deployment."
+        "The ChapterGrabbingPage no longer calls the backend grabComicPages function for fetching page content.",
+        "Entering a source URL and clicking grab sends a request to https://api.allorigins.win/get?url=<encoded_url> from the frontend.",
+        "The response HTML is parsed client-side to extract img tag URLs matching manga page patterns.",
+        "If allorigins.win returns an error or times out, the UI automatically retries via a fallback proxy (e.g., corsproxy.io).",
+        "If both proxies fail, an informative error message is displayed to the admin.",
+        "Successfully extracted image URLs are displayed as a preview grid showing the actual images.",
+        "Admin can reorder and remove images from the preview grid before saving.",
+        "Saving the confirmed page list still calls the existing backend chapter creation mutation.",
+        "The scope of this change is limited to the Chapter Grabbing UI only."
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/utils/proxyFetch.ts",
+          "operation": "create",
+          "description": "Create a utility module that exports fetchViaProxy function for making HTTP requests through allorigins.win as primary proxy (https://api.allorigins.win/get?url=<encoded_url>) and corsproxy.io as fallback (https://corsproxy.io/?<encoded_url>). The function encodes the target URL, attempts the primary proxy first with timeout handling, automatically falls back to the secondary proxy on failure, and returns the HTML content string or throws an error if both proxies fail. Include proper error types to differentiate network errors, timeouts, and HTTP status failures."
+        },
+        {
+          "path": "frontend/src/utils/htmlParser.ts",
+          "operation": "create",
+          "description": "Create a utility module that exports extractImageUrls function to parse HTML strings and extract image URLs matching common manga page patterns. Use DOMParser to parse the HTML, query for img tags, filter by patterns such as large image dimensions, numbered filenames, common manga CDN domains, and sequential naming conventions. Return an array of extracted image URL strings with duplicates removed and maintain order of appearance."
+        },
+        {
+          "path": "frontend/src/pages/admin/ChapterGrabbingPage.tsx",
           "operation": "modify",
-          "description": "Verify the frontend build artifacts are ready for production deployment. No actual code changes - this file operation represents the validation step before promoting the draft build to live."
+          "description": "Refactor the page to remove all calls to the backend grabComicPages function. Replace the backend fetch with client-side proxy fetching using the new fetchViaProxy utility from frontend/src/utils/proxyFetch.ts. On grab button click, call fetchViaProxy with the admin-entered source URL, handle loading states during primary and fallback proxy attempts, parse the returned HTML using extractImageUrls from frontend/src/utils/htmlParser.ts to extract manga page image URLs, and display them in a preview grid showing the actual images (not just URLs). Add UI feedback showing which proxy is being attempted (primary/fallback) and clear error messages when both proxies fail. Preserve the existing drag-and-drop reordering and removal functionality for the preview grid. Keep the save functionality unchanged, continuing to use the existing createChapter mutation from useQueries to persist the final confirmed page list to the backend."
         }
       ]
     }
